@@ -46,9 +46,9 @@ export class BevyPlatformInfraStack extends cdk.Stack {
       // 環境名とアカウントIDを組み合わせて一意性を担保
       bucketName: `${STORAGE_CONFIG.BUCKET_PREFIX}-${envName}-${this.account}`,
       
-      // 3. セキュリティ強化のための設定を追加
+      // セキュリティ強化のための設定を追加
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      // 4. ライフサイクルルールを追加して古いオブジェクトを自動的に削除
+      // ライフサイクルルールを追加して古いオブジェクトを自動的に削除
       encryption: s3.BucketEncryption.S3_MANAGED,
       // バージョニングを有効にして、誤って削除されたオブジェクトの復元を可能にする
       versioned: true,
@@ -65,7 +65,7 @@ export class BevyPlatformInfraStack extends cdk.Stack {
           など
        */
 
-      // 4. ライフサイクルルールを追加して古いオブジェクトを自動的に削除
+      // ライフサイクルルールを追加して古いオブジェクトを自動的に削除
       lifecycleRules: [
         {
           id: 'ExpireOldBuilds',
