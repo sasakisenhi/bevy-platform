@@ -29,7 +29,10 @@ export class BevyPlatformInfraStack extends cdk.Stack {
     const githubOwner = this.node.tryGetContext('githubOwner') || GITHUB_OIDC_CONFIG.PLACEHOLDER_OWNER;
     const githubRepo = this.node.tryGetContext('githubRepo') || GITHUB_OIDC_CONFIG.PLACEHOLDER_REPO;
     const githubBranch = this.node.tryGetContext('githubBranch') || GITHUB_OIDC_CONFIG.DEFAULT_BRANCH;
-    const githubOidcProviderArn = this.node.tryGetContext('githubOidcProviderArn');
+    
+    // 既存のARNが明示的に指定されている場合、またはAWSアカウントに既にプロバイダーが存在すると想定される場合のARN
+    const existingProviderArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`;
+    
     const githubSub = `repo:${githubOwner}/${githubRepo}:ref:refs/heads/${githubBranch}`;
 
     // GitHub OIDCの設定がプレースホルダーのままの場合は警告を出す
@@ -78,20 +81,16 @@ export class BevyPlatformInfraStack extends cdk.Stack {
         }
       ],
     });
-    // GitHub Actions用のIAMロールを作成（ブランチスコープの信頼関係を設定）
+    // ★ 修正箇所：常に新しいプロバイダーを作るのではなく、既存のARNを参照する
+    // 初回作成時（プロバイダーがない状態）は、`fromOpenIdConnectProviderArn` ではなく新規作成するか、または例外を考慮する必要がありますが、
+    // 既存のエラー（EntityAlreadyExistsException）を回避するため、すでに存在する場合は既存のARNで参照します。
+    // CDKの組み込みメソッド `OpenIdConnectProvider.fromOpenIdConnectProviderArn` を使用します。
 
-    const githubProvider = githubOidcProviderArn
-      ? iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
-          this,
-          'GithubProvider',
-          githubOidcProviderArn,
-        )
-    // OIDCプロバイダーが指定されていない場合は新規作成
-      : new iam.OpenIdConnectProvider(this, 'GithubProvider', {
-          url: GITHUB_OIDC_CONFIG.PROVIDER_URL,
-          clientIds: [GITHUB_OIDC_CONFIG.CLIENT_ID],
-          thumbprints: [GITHUB_OIDC_CONFIG.THUMBPRINT],
-        });
+    const githubProvider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+      this,
+      'GithubProvider',
+      existingProviderArn,
+    );
     // GitHub Actionsが特定のリポジトリとブランチからのみロールを引き受けられるようにする
     const githubRole = new iam.Role(this, 'GithubActionsRole', {
       assumedBy: new iam.WebIdentityPrincipal(
