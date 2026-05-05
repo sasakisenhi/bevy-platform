@@ -48,7 +48,7 @@ export class BevyPlatformInfraStack extends cdk.Stack {
       
       // セキュリティ強化のための設定を追加
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      // ライフサイクルルールを追加して古いオブジェクトを自動的に削除
+      // S3マネージド暗号化を有効にして、保存データを暗号化する
       encryption: s3.BucketEncryption.S3_MANAGED,
       // バージョニングを有効にして、誤って削除されたオブジェクトの復元を可能にする
       versioned: true,
@@ -63,6 +63,8 @@ export class BevyPlatformInfraStack extends cdk.Stack {
           ・ライフサイクルルールで特定のプレフィックスやタグに基づいてオブジェクトを管理する設定
           ・アクセスコントロールリスト（ACL）やバケットポリシーで細かいアクセス制御を設定することも可能
           など
+          詳しくは下記のURLを参照 
+          https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html
        */
 
       // ライフサイクルルールを追加して古いオブジェクトを自動的に削除
